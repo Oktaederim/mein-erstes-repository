@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraft-Druck-Fläche Rechner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optional: Custom styles if needed, Tailwind handles most */
+        body {
+            font-family: 'Inter', sans-serif; /* Tailwind uses a sans-serif stack by default */
+        }
+        /* Style for disabled inputs that are not for calculation target */
+        input[disabled].not-target::placeholder {
+            color: #9ca3af; /* gray-400 */
+        }
+         /* Style for disabled inputs that ARE the calculation target */
+        input[disabled].target-field::placeholder {
+            color: #374151; /* gray-700 font weight normal */
+            font-weight: normal;
+        }
+
+        /* Custom styling for a more "app-like" feel */
+        .calculator-card {
+            background-color: white;
+            padding: 1.5rem; /* p-6 */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+        }
+        .input-label {
+            display: block;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            color: #374151; /* text-gray-700 */
+            margin-bottom: 0.25rem; /* mb-1 */
+        }
+        .input-field {
+            margin-top: 0.25rem; /* mt-1 */
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem; /* py-3 px-4 for larger touch targets */
+            border: 1px solid #D1D5DB; /* border-gray-300 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: inset 0 1px 2px 0 rgba(0,0,0,0.05); /* shadow-sm */
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #2563EB; /* focus:border-blue-600 */
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25); /* focus:ring-blue-500 with opacity */
+        }
+        .input-field[disabled] {
+            background-color: #f3f4f6; /* bg-gray-100 */
+            cursor: not-allowed;
+        }
+        .calculate-button {
+            margin-top: 1.5rem; /* mt-6 */
+            width: 100%;
+            background-color: #2563EB; /* bg-blue-600 */
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            transition: background-color 0.15s ease-in-out;
+        }
+        .calculate-button:hover {
+            background-color: #1D4ED8; /* hover:bg-blue-700 */
+        }
+        .result-area {
+            margin-top: 1.5rem; /* mt-6 */
+            padding: 1rem; /* p-4 */
+            background-color: #E0F2FE; /* bg-sky-100 */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid #7DD3FC; /* border-sky-300 */
+        }
+        .result-area h3 {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #0C4A6E; /* text-sky-800 */
+        }
+        .result-area p {
+            color: #075985; /* text-sky-700 */
+            margin-top: 0.25rem; /* mt-1 */
+            word-break: break-all;
+        }
+        .error-area {
+            margin-top: 1rem; /* mt-4 */
+            padding: 1rem; /* p-4 */
+            background-color: #FEE2E2; /* bg-red-100 */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid #FCA5A5; /* border-red-300 */
+        }
+        .error-area p {
+            color: #B91C1C; /* text-red-700 */
+            word-break: break-all;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="calculator-card w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Kraft-Druck-Fläche Rechner</h1>
+
+        <div class="mb-6">
+            <label for="calculationType" class="input-label">Zu berechnender Wert:</label>
+            <select id="calculationType" class="input-field">
+                <option value="force">Kraft (F)</option>
+                <option value="pressure">Druck (ΔP)</option>
+                <option value="area">Fläche (A)</option>
+            </select>
+        </div>
+
+        <div id="inputFields" class="space-y-4">
+            <div>
+                <label for="force" class="input-label">Kraft (F) [N]</label>
+                <input type="number" step="any" id="force" class="input-field" placeholder="z.B. 100">
+            </div>
+
+            <div>
+                <label for="pressure" class="input-label">Differenzdruck (ΔP) [Pa]</label>
+                <input type="number" step="any" id="pressure" class="input-field" placeholder="z.B. 1000">
+            </div>
+
+            <div>
+                <label for="length" class="input-label">Länge (L) [mm]</label>
+                <input type="number" step="any" id="length" class="input-field" placeholder="z.B. 200">
+            </div>
+
+            <div>
+                <label for="width" class="input-label">Breite (B) [mm]</label>
+                <input type="number" step="any" id="width" class="input-field" placeholder="z.B. 100">
+            </div>
+        </div>
+
+        <button id="calculateButton" class="calculate-button">
+            Berechnen
+        </button>
+
+        <div id="resultArea" class="result-area hidden">
+            <h3 id="resultTitle">Ergebnis:</h3>
+            <p id="resultText"></p>
+        </div>
+        
+        <div id="errorArea" class="error-area hidden">
+            <p id="errorText"></p>
+        </div>
+    </div>
+
+    <script>
+        // DOM Element References
+        const calculationTypeSelect = document.getElementById('calculationType');
+        const forceInput = document.getElementById('force');
+        const pressureInput = document.getElementById('pressure');
+        const lengthInput = document.getElementById('length');
+        const widthInput = document.getElementById('width');
+        const calculateButton = document.getElementById('calculateButton');
+        const resultAreaDiv = document.getElementById('resultArea');
+        const resultTextP = document.getElementById('resultText');
+        const resultTitleH3 = document.getElementById('resultTitle');
+        const errorAreaDiv = document.getElementById('errorArea');
+        const errorTextP = document.getElementById('errorText');
+
+        // Function to update form fields based on selected calculation type
+        function updateFormFields() {
+            const type = calculationTypeSelect.value;
+            
+            // Reset all inputs: enable them, clear values and placeholders
+            const allInputs = [forceInput, pressureInput, lengthInput, widthInput];
+            allInputs.forEach(input => {
+                input.disabled = false;
+                input.value = '';
+                input.classList.remove('target-field', 'not-target');
+                // Restore default placeholders
+                if (input === forceInput) input.placeholder = "z.B. 100";
+                if (input === pressureInput) input.placeholder = "z.B. 1000";
+                if (input === lengthInput) input.placeholder = "z.B. 200";
+                if (input === widthInput) input.placeholder = "z.B. 100";
+            });
+
+            resultAreaDiv.classList.add('hidden');
+            errorAreaDiv.classList.add('hidden');
+
+            // Configure fields for the selected calculation type
+            if (type === 'force') {
+                forceInput.disabled = true;
+                forceInput.placeholder = "Wird berechnet...";
+                forceInput.classList.add('target-field');
+            } else if (type === 'pressure') {
+                pressureInput.disabled = true;
+                pressureInput.placeholder = "Wird berechnet...";
+                pressureInput.classList.add('target-field');
+            } else if (type === 'area') {
+                lengthInput.disabled = true;
+                lengthInput.placeholder = "Nicht für Berechnung benötigt";
+                lengthInput.classList.add('not-target');
+                widthInput.disabled = true;
+                widthInput.placeholder = "Nicht für Berechnung benötigt";
+                widthInput.classList.add('not-target');
+            }
+        }
+
+        // Function to display errors
+        function showError(message) {
+            errorTextP.textContent = message;
+            errorAreaDiv.classList.remove('hidden');
+            resultAreaDiv.classList.add('hidden');
+        }
+
+        // Function to display results
+        function showResult(title, valueString) {
+            resultTitleH3.textContent = title;
+            resultTextP.innerHTML = valueString; // Use innerHTML for m²
+            resultAreaDiv.classList.remove('hidden');
+            errorAreaDiv.classList.add('hidden');
+        }
+        
+        // Main calculation logic
+        function calculate() {
+            const type = calculationTypeSelect.value;
+            let F, P, L_mm, B_mm, L_m, B_m, A_m2;
+
+            // Clear previous messages
+            resultAreaDiv.classList.add('hidden');
+            errorAreaDiv.classList.add('hidden');
+
+            try {
+                if (type === 'force') {
+                    P = parseFloat(pressureInput.value);
+                    L_mm = parseFloat(lengthInput.value);
+                    B_mm = parseFloat(widthInput.value);
+
+                    if (isNaN(P) || isNaN(L_mm) || isNaN(B_mm)) {
+                        throw new Error("Bitte geben Sie gültige Zahlen für Druck, Länge und Breite ein.");
+                    }
+                    if (L_mm <= 0 || B_mm <= 0) {
+                        throw new Error("Länge und Breite müssen größer als Null sein.");
+                    }
+
+                    L_m = L_mm / 1000;
+                    B_m = B_mm / 1000;
+                    A_m2 = L_m * B_m;
+                    F = P * A_m2;
+                    showResult("Ergebnis Kraft (F):", `${F.toFixed(3)} N`);
+
+                } else if (type === 'pressure') {
+                    F = parseFloat(forceInput.value);
+                    L_mm = parseFloat(lengthInput.value);
+                    B_mm = parseFloat(widthInput.value);
+
+                    if (isNaN(F) || isNaN(L_mm) || isNaN(B_mm)) {
+                        throw new Error("Bitte geben Sie gültige Zahlen für Kraft, Länge und Breite ein.");
+                    }
+                    if (L_mm <= 0 || B_mm <= 0) {
+                        throw new Error("Länge und Breite müssen größer als Null sein, um eine Fläche zu definieren.");
+                    }
+
+                    L_m = L_mm / 1000;
+                    B_m = B_mm / 1000;
+                    A_m2 = L_m * B_m;
+
+                    if (A_m2 === 0) { // Should be caught by L_mm/B_mm > 0 check, but defensive
+                        throw new Error("Die Fläche (Länge x Breite) darf nicht Null sein für die Druckberechnung.");
+                    }
+                    P = F / A_m2;
+                    showResult("Ergebnis Druck (ΔP):", `${P.toFixed(3)} Pa`);
+
+                } else if (type === 'area') {
+                    F = parseFloat(forceInput.value);
+                    P = parseFloat(pressureInput.value);
+
+                    if (isNaN(F) || isNaN(P)) {
+                        throw new Error("Bitte geben Sie gültige Zahlen für Kraft und Druck ein.");
+                    }
+                    if (P === 0) {
+                        throw new Error("Der Druck darf nicht Null sein für die Flächenberechnung.");
+                    }
+
+                    A_m2 = F / P;
+                    const A_mm2 = A_m2 * 1000000; // 1 m² = 1,000,000 mm²
+                    showResult("Ergebnis Fläche (A):", 
+                        `${A_m2.toFixed(4)} m²<br>(entspricht ${A_mm2.toFixed(2)} mm²)`);
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Event Listeners
+        calculationTypeSelect.addEventListener('change', updateFormFields);
+        calculateButton.addEventListener('click', calculate);
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFormFields(); // Set initial state of the form
+        });
+    </script>
+</body>
+</html>
+
