@@ -237,8 +237,8 @@
                         throw new Error("Länge und Breite müssen größer als Null sein.");
                     }
 
-                    L_m = L_mm / 1000;
-                    B_m = B_mm / 1000;
+                    L_m = Number(L_mm) / 1000;
+                    B_m = Number(B_mm) / 1000;
                     A_m2 = L_m * B_m;
                     F = P * A_m2;
                     showResult("Ergebnis Kraft (F):", `${F.toFixed(3)} N`);
@@ -255,8 +255,8 @@
                         throw new Error("Länge und Breite müssen größer als Null sein, um eine Fläche zu definieren.");
                     }
 
-                    L_m = L_mm / 1000;
-                    B_m = B_mm / 1000;
+                    L_m = Number(L_mm) / 1000;
+                    B_m = Number(B_mm) / 1000;
                     A_m2 = L_m * B_m;
 
                     if (A_m2 === 0) { // Should be caught by L_mm/B_mm > 0 check, but defensive
